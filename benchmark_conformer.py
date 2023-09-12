@@ -29,7 +29,7 @@ from utils import (
     str2bool,
 )
 
-from zipformer import get_zipformer_model
+from conformer import get_conformer_model
 
 
 def get_args():
@@ -60,7 +60,7 @@ def main():
         batch_size = 30
         suffix = batch_size
 
-    model, params = get_zipformer_model(scale="medium")
+    model, params = get_conformer_model()
     model.to(device)
     model.eval()
 
@@ -77,7 +77,7 @@ def main():
             wait=10, warmup=10, active=20, repeat=2
         ),
         on_trace_ready=torch.profiler.tensorboard_trace_handler(
-            f"./log/zipformer-{suffix}"
+            f"./log/conformer-{suffix}"
         ),
         record_shapes=True,
         with_stack=True,
@@ -98,7 +98,7 @@ def main():
         )
         encoder_in_lens = encoder_in_lens.to(torch.int64)
 
-        with record_function("zipformer"):
+        with record_function("conformer"):
             encoder_out, encoder_out_lengths = model(encoder_in, encoder_in_lens)
 
         if i > 80:
@@ -114,7 +114,7 @@ def main():
         )
     )
 
-    with open(f"zipformer-{suffix}.txt", "w") as f:
+    with open(f"conformer-{suffix}.txt", "w") as f:
         f.write(s + "\n")
 
 
