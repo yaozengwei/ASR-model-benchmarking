@@ -1421,8 +1421,8 @@ class Conv2dSubsampling(nn.Module):
         return x
 
 
-def model_params() -> AttributeDict:
-    params = AttributeDict(
+def model_params(scale) -> AttributeDict:
+    medium_large = AttributeDict(
         {
             "feature_dim": 80,
             "subsampling_factor": 4,
@@ -1436,11 +1436,54 @@ def model_params() -> AttributeDict:
             "num_left_chunks": 4,
         }
     )
-    return params
+    large = AttributeDict(
+        {
+            "feature_dim": 80,
+            "subsampling_factor": 4,
+            "encoder_dim": 512,
+            "nhead": 8,
+            "dim_feedforward": 2048,
+            "num_encoder_layers": 18,
+            "dynamic_chunk_training": False,
+            "causal_convolution": False,
+            "short_chunk_size": 25,
+            "num_left_chunks": 4,
+        }
+    )
+    small = AttributeDict(
+        {
+            "feature_dim": 80,
+            "subsampling_factor": 4,
+            "encoder_dim": 144,
+            "nhead": 4,
+            "dim_feedforward": 576,
+            "num_encoder_layers": 16,
+            "dynamic_chunk_training": False,
+            "causal_convolution": False,
+            "short_chunk_size": 25,
+            "num_left_chunks": 4,
+        }
+    )
+    medium = AttributeDict(
+        {
+            "feature_dim": 80,
+            "subsampling_factor": 4,
+            "encoder_dim": 256,
+            "nhead": 4,
+            "dim_feedforward": 1024,
+            "num_encoder_layers": 16,
+            "dynamic_chunk_training": False,
+            "causal_convolution": False,
+            "short_chunk_size": 25,
+            "num_left_chunks": 4,
+        }
+    )
+    params = {"medium_large": medium_large, "large": large, "small": small, "medium": medium}
+    return params[scale]
 
 
-def get_conformer_model() -> nn.Module:
-    params = model_params()
+def get_conformer_model(scale) -> nn.Module:
+    params = model_params(scale)
     # TODO: We can add an option to switch between Conformer and Transformer
     model = Conformer(
         num_features=params.feature_dim,
@@ -1457,8 +1500,8 @@ def get_conformer_model() -> nn.Module:
     return model, params
 
 
-def _test_conformer_main():
-    model, params = get_conformer_model()
+def _test_conformer_main(scale="medium_large"):
+    model, params = get_conformer_model(scale)
 
     model.eval()
 
@@ -1479,4 +1522,7 @@ if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
     torch.set_num_threads(1)
     torch.set_num_interop_threads(1)
-    _test_conformer_main()
+    _test_conformer_main(scale="medium_large")
+    _test_conformer_main(scale="large")
+    _test_conformer_main(scale="small")
+    _test_conformer_main(scale="medium")

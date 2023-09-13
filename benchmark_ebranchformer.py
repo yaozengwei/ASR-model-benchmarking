@@ -29,7 +29,7 @@ from utils import (
     str2bool,
 )
 
-from zipformer import get_zipformer_model
+from ebranchformer import get_ebranchformer_model
 
 
 def get_args():
@@ -45,7 +45,7 @@ def get_args():
         "--model-scale",
         type=str,
         default="large",
-        help="Model scale, could be in ['large', 'medium', 'small']",
+        help="Model scale, could be 'large' or 'base'",
     )
 
     return parser.parse_args()
@@ -62,13 +62,13 @@ def main():
 
     if args.sort_utterance:
         max_frames = 100000
-        suffix = f"zipformer-{args.model_scale}-max-frames-{max_frames}"
+        suffix = f"ebranchformer-{args.model_scale}-max-frames-{max_frames}"
     else:
         # won't OOM when it's 50. Set it to 30 as torchaudio is using 30
         batch_size = 30
-        suffix = f"zipformer-{args.model_scale}-{batch_size}"
+        suffix = f"ebranchformer-{args.model_scale}-{batch_size}"
 
-    model, params = get_zipformer_model(scale=args.scale)
+    model, params = get_ebranchformer_model(args.model_scale)
     num_param = sum([p.numel() for p in model.parameters()])
     print(f"Number of model parameters: {num_param}")
 
@@ -104,13 +104,13 @@ def main():
             encoder_in_lens,
         ) = generate_data(
             shape_info,
-            encoder_in_dim=params.feature_dim,  # 80
+            encoder_in_dim=params.input_size,  # 80
             device=device,
         )
         encoder_in_lens = encoder_in_lens.to(torch.int64)
 
         with record_function(suffix):
-            encoder_out, encoder_out_lengths = model(encoder_in, encoder_in_lens)
+            encoder_out, encoder_out_lengths, _ = model(encoder_in, encoder_in_lens)
 
         if i > 80:
             break

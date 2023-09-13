@@ -2599,18 +2599,16 @@ class Conv2dSubsampling(nn.Module):
 
 
 class Model(nn.Module):
-    """A Wrapper for encoder, encoder_embed, and encoder_proj"""
+    """A Wrapper for encoder and encoder_embed"""
 
     def __init__(
         self,
         encoder: nn.Module,
         encoder_embed: nn.Module,
-        encoder_proj: nn.Module,
     ) -> None:
         super().__init__()
         self.encoder = encoder
         self.encoder_embed = encoder_embed
-        self.encoder_proj = encoder_proj
 
     def forward(
         self, feature: Tensor, feature_lens: Tensor
@@ -2622,11 +2620,9 @@ class Model(nn.Module):
         encoder_out, encoder_out_lens = self.encoder(
             x, x_lens, src_key_padding_mask=None
         )
-
         encoder_out = encoder_out.permute(1, 0, 2)  # (N, T, C) -> (T, N, C)
-        logits = self.encoder_proj(encoder_out)
 
-        return logits, encoder_out_lens
+        return encoder_out, encoder_out_lens
 
 
 def _to_int_tuple(s: str):
@@ -2746,7 +2742,6 @@ def get_zipformer_model(scale="medium") -> nn.Module:
     model = Model(
         encoder=get_encoder_model(params),
         encoder_embed=get_encoder_embed(params),
-        encoder_proj=nn.Linear(max(_to_int_tuple(params.encoder_dim)), 512),
     )
     return model, params
 

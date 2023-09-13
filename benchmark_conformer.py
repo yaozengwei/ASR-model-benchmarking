@@ -37,7 +37,15 @@ def get_args():
     parser.add_argument(
         "--sort-utterance",
         type=str2bool,
+        default=True,
         help="True to sort utterance duration before batching them up",
+    )
+
+    parser.add_argument(
+        "--model-scale",
+        type=str,
+        default="large",
+        help="Model scale, could be in ['medium_large', 'large', 'medium', 'small']",
     )
 
     return parser.parse_args()
@@ -54,13 +62,16 @@ def main():
 
     if args.sort_utterance:
         max_frames = 100000
-        suffix = f"max-frames-{max_frames}"
+        suffix = f"conformer-{args.model_scale}-max-frames-{max_frames}"
     else:
         # won't OOM when it's 50. Set it to 30 as torchaudio is using 30
         batch_size = 30
-        suffix = batch_size
+        suffix = f"conformer-{args.model_scale}-{batch_size}"
 
-    model, params = get_conformer_model()
+    model, params = get_conformer_model(args.model_scale)
+    num_param = sum([p.numel() for p in model.parameters()])
+    print(f"Number of model parameters: {num_param}")
+
     model.to(device)
     model.eval()
 
@@ -77,7 +88,7 @@ def main():
             wait=10, warmup=10, active=20, repeat=2
         ),
         on_trace_ready=torch.profiler.tensorboard_trace_handler(
-            f"./log/conformer-{suffix}"
+            f"./log/{suffix}"
         ),
         record_shapes=True,
         with_stack=True,
@@ -98,7 +109,7 @@ def main():
         )
         encoder_in_lens = encoder_in_lens.to(torch.int64)
 
-        with record_function("conformer"):
+        with record_function(suffix):
             encoder_out, encoder_out_lengths = model(encoder_in, encoder_in_lens)
 
         if i > 80:
@@ -114,7 +125,7 @@ def main():
         )
     )
 
-    with open(f"conformer-{suffix}.txt", "w") as f:
+    with open(f"{suffix}.txt", "w") as f:
         f.write(s + "\n")
 
 
