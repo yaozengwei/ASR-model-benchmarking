@@ -68,7 +68,7 @@ def main():
         batch_size = 30
         suffix = f"zipformer-{args.model_scale}-{batch_size}"
 
-    model, params = get_zipformer_model(scale=args.scale)
+    model, params = get_zipformer_model(scale=args.model_scale)
     num_param = sum([p.numel() for p in model.parameters()])
     print(f"Number of model parameters: {num_param}")
 

@@ -37,6 +37,7 @@ def get_args():
     parser.add_argument(
         "--sort-utterance",
         type=str2bool,
+        default=True,
         help="True to sort utterance duration before batching them up",
     )
 
