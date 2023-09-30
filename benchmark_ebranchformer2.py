@@ -29,7 +29,7 @@ from utils import (
     str2bool,
 )
 
-from efficient_conformer import get_efficient_conformer_model
+from ebranchformer import get_ebranchformer_model
 
 
 def get_args():
@@ -45,7 +45,7 @@ def get_args():
         "--model-scale",
         type=str,
         default="large",
-        help="Model scale, could be in ['large', 'medium', 'small']",
+        help="Model scale, could be 'large' or 'base'",
     )
 
     return parser.parse_args()
@@ -62,13 +62,13 @@ def main():
 
     if args.sort_utterance:
         max_frames = 100000
-        suffix = f"efficient_conformer2-{args.model_scale}-max-frames-{max_frames}"
+        suffix = f"ebranchformer-{args.model_scale}-max-frames-{max_frames}"
     else:
         # won't OOM when it's 50. Set it to 30 as torchaudio is using 30
         batch_size = 30
-        suffix = f"efficient_conformer-{args.model_scale}-{batch_size}"
+        suffix = f"ebranchformer-{args.model_scale}-{batch_size}"
 
-    model, params = get_efficient_conformer_model(args.model_scale)
+    model, params = get_ebranchformer_model(args.model_scale)
     num_param = sum([p.numel() for p in model.parameters()])
     print(f"Number of model parameters: {num_param}")
 
@@ -107,7 +107,7 @@ def main():
         encoder_in_lens = torch.full((B,), T, dtype=torch.int64, device=device)
 
         with record_function(suffix):
-            encoder_out, encoder_out_lengths, _ = model(encoder_in.transpose(1, 2), encoder_in_lens)
+            encoder_out, encoder_out_lengths, _ = model(encoder_in, encoder_in_lens)
 
         if i > 80:
             break

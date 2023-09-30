@@ -88,7 +88,7 @@ def main():
             wait=10, warmup=10, active=20, repeat=2
         ),
         on_trace_ready=torch.profiler.tensorboard_trace_handler(
-            f"./log/{suffix}"
+            f"./log_models/{suffix}"
         ),
         record_shapes=True,
         with_stack=True,
@@ -97,17 +97,23 @@ def main():
 
     prof.start()
 
+    # for 30-second input
+    B, T, D = 30, 3000, 80
+
     for i, shape_info in enumerate(shape_generator):
         print("i", i)
-        (
-            encoder_in,
-            encoder_in_lens,
-        ) = generate_data(
-            shape_info,
-            encoder_in_dim=params.feat_in,  # 80
-            device=device,
-        )
-        encoder_in_lens = encoder_in_lens.to(torch.int64)
+        # (
+        #     encoder_in,
+        #     encoder_in_lens,
+        # ) = generate_data(
+        #     shape_info,
+        #     encoder_in_dim=params.feat_in,  # 80
+        #     device=device,
+        # )
+        # encoder_in_lens = encoder_in_lens.to(torch.int64)
+
+        encoder_in = torch.ones(B, T, D, dtype=torch.float32, device=device)
+        encoder_in_lens = torch.full((B,), T, dtype=torch.int64, device=device)
 
         with record_function(suffix):
             encoder_out, encoder_out_lengths = model(

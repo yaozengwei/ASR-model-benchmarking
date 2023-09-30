@@ -29,7 +29,19 @@ from utils import (
     str2bool,
 )
 
-from efficient_conformer import get_efficient_conformer_model
+# from zipformer import get_zipformer_model
+from zipformer_ds4 import get_zipformer_model
+# from zipformer_no_convnext import get_zipformer_model
+# from zipformer_old_pos import get_zipformer_model
+# from zipformer_double_attn import get_zipformer_model
+# from zipformer_no_attn_shared_layer import get_zipformer_model
+# from zipformer_no_nonlin import get_zipformer_model
+# from zipformer_no_attn_shared_layer_new_pos import get_zipformer_model
+# from zipformer_no_bypass import get_zipformer_model
+# from zipformer_no_biasnorm import get_zipformer_model
+# from zipformer_all_biasnorm import get_zipformer_model
+# from zipformer_no_swoosh import get_zipformer_model
+# from zipformer_old_sub_ds4_no_dsenc import get_zipformer_model
 
 
 def get_args():
@@ -44,7 +56,7 @@ def get_args():
     parser.add_argument(
         "--model-scale",
         type=str,
-        default="large",
+        default="medium",
         help="Model scale, could be in ['large', 'medium', 'small']",
     )
 
@@ -62,13 +74,26 @@ def main():
 
     if args.sort_utterance:
         max_frames = 100000
-        suffix = f"efficient_conformer2-{args.model_scale}-max-frames-{max_frames}"
+        # suffix = f"zipformer-{args.model_scale}-max-frames-{max_frames}"
+        # suffix = f"zipformer-no_convnext-{args.model_scale}-max-frames-{max_frames}"
+        # suffix = f"zipformer-old-pos-{args.model_scale}-max-frames-{max_frames}"
+        # suffix = f"zipformer-double-attn-{args.model_scale}-max-frames-{max_frames}"
+        # suffix = f"zipformer-no_attn_shared_layer-{args.model_scale}-max-frames-{max_frames}"
+        # suffix = f"zipformer-no_nonlin-{args.model_scale}-max-frames-{max_frames}"
+        # suffix = f"zipformer-no_attn_shared_layer_new_pos-{args.model_scale}-max-frames-{max_frames}"
+        # suffix = f"zipformer-no_attn_shared_double_layer-{args.model_scale}-max-frames-{max_frames}"
+        # suffix = f"zipformer-no_bypass-{args.model_scale}-max-frames-{max_frames}"
+        # suffix = f"zipformer-no_biasnorm-{args.model_scale}-max-frames-{max_frames}"
+        # suffix = f"zipformer-all_biasnorm-{args.model_scale}-max-frames-{max_frames}"
+        # suffix = f"zipformer-no_swoosh-{args.model_scale}-max-frames-{max_frames}"
+        # suffix = f"zipformer-old_sub_ds4_no_dsenc-{args.model_scale}-max-frames-{max_frames}"
+        suffix = f"zipformer-ds4-{args.model_scale}-max-frames-{max_frames}"
     else:
         # won't OOM when it's 50. Set it to 30 as torchaudio is using 30
         batch_size = 30
-        suffix = f"efficient_conformer-{args.model_scale}-{batch_size}"
+        suffix = f"zipformer-{args.model_scale}-{batch_size}"
 
-    model, params = get_efficient_conformer_model(args.model_scale)
+    model, params = get_zipformer_model(scale=args.model_scale)
     num_param = sum([p.numel() for p in model.parameters()])
     print(f"Number of model parameters: {num_param}")
 
@@ -88,7 +113,7 @@ def main():
             wait=10, warmup=10, active=20, repeat=2
         ),
         on_trace_ready=torch.profiler.tensorboard_trace_handler(
-            f"./log_models/{suffix}"
+            f"./log_ablation2/{suffix}"
         ),
         record_shapes=True,
         with_stack=True,
@@ -107,7 +132,7 @@ def main():
         encoder_in_lens = torch.full((B,), T, dtype=torch.int64, device=device)
 
         with record_function(suffix):
-            encoder_out, encoder_out_lengths, _ = model(encoder_in.transpose(1, 2), encoder_in_lens)
+            encoder_out, encoder_out_lengths = model(encoder_in, encoder_in_lens)
 
         if i > 80:
             break
