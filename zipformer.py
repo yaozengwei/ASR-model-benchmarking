@@ -2733,7 +2733,28 @@ def model_params(scale="medium") -> AttributeDict:
         }
     )
 
-    models = {"small": small, "medium": medium, "large": large}
+    tiny = AttributeDict(
+        {
+            "feature_dim": 80,
+            "subsampling_factor": 4,
+            "num_encoder_layers": "2,2,2,2,2,2",
+            "downsampling_factor": "1,2,4,8,4,2",
+            "feedforward_dim": "256,256,384,384,384,256",
+            "num_heads": "3,3,3,6,3,3",
+            "encoder_dim": "96,96,128,128,128,96",
+            "query_head_dim": "32",
+            "value_head_dim": "12",
+            "pos_head_dim": "4",
+            "pos_dim": 48,
+            "encoder_unmasked_dim": "96,96,128,128,128,96",
+            "cnn_module_kernel": "31,31,15,15,15,31",
+            "causal": False,
+            "chunk_size": "16,32,64,-1",
+            "left_context_frames": "64,128,256,-1",
+        }
+    )
+
+    models = {"small": small, "medium": medium, "large": large, 'tiny': tiny}
     return models[scale]
 
 
@@ -2768,6 +2789,7 @@ if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
     torch.set_num_threads(1)
     torch.set_num_interop_threads(1)
-    _test_zipformer_main("medium")
-    _test_zipformer_main("small")
-    _test_zipformer_main("large")
+    # _test_zipformer_main("medium")
+    # _test_zipformer_main("small")
+    # _test_zipformer_main("large")
+    _test_zipformer_main("tiny")
